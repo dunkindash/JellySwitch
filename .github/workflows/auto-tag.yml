@@ -28,8 +28,8 @@ jobs:
           # Default bump is patch
           BUMP=patch
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            # Collect labels
-            LABELS=$(jq -r '.pull_request.labels[].name' <(echo '${{ toJson(github.event) }}') || true)
+            # Collect labels from event payload path to avoid quoting issues
+            LABELS=$(jq -r '.pull_request.labels[].name' "$GITHUB_EVENT_PATH" 2>/dev/null || true)
             echo "Labels: $LABELS"
             if echo "$LABELS" | grep -qi '^release:major$'; then BUMP=major; fi
             if echo "$LABELS" | grep -qi '^release:minor$'; then BUMP=minor; fi
