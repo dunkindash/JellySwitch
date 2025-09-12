@@ -110,6 +110,7 @@ jobs:
             --arg abi "${{ env.TARGET_ABI }}" \
             --arg framework "${{ env.FRAMEWORK }}" \
             --arg sha "$SHA256" \
+            --arg ts "$TS" \
             '[
               {
                 guid: $guid,
@@ -125,7 +126,7 @@ jobs:
                     targetAbi: $abi,
                     sourceUrl: ("https://github.com/" + $repo + "/releases/download/" + $ref + "/" + $assembly + "-" + $version + ".zip"),
                     checksum: ("sha256:" + $sha),
-                    timestamp: $TS
+                    timestamp: $ts
                   }
                 ]
               }
