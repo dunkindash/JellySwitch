@@ -1,0 +1,44 @@
+name: Auto Tag
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - '.github/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to tag (e.g., 0.1.0)'
+        required: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: ver
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          # Auto-bump: If last tag is vX.Y.Z, create vX.Y.(Z+1)
+          LAST=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          NUM=${LAST#v}
+          IFS='.' read -r MA MI PA <<< "$NUM"
+          PA=$((PA+1))
+          NEXT="${MA}.${MI}.${PA}"
+          echo "version=$NEXT" >> $GITHUB_OUTPUT
+
+      - name: Create tag
+        run: |
+          VERSION="${{ steps.ver.outputs.version }}"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+
