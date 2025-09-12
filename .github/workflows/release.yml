@@ -82,7 +82,7 @@ jobs:
         id: sum
         run: |
           cd dist
-          SHA=$(shasum -a 256 "${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip" | cut -d ' ' -f1)
+          SHA=$(shasum -a 256 "${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip" | cut -d ' ' -f1 | tr '[:lower:]' '[:upper:]')
           echo "sha256=$SHA" >> $GITHUB_OUTPUT
 
       - name: Upload Release Asset
@@ -125,7 +125,7 @@ jobs:
                     changelog: ("Release " + $version),
                     targetAbi: $abi,
                     sourceUrl: ("https://github.com/" + $repo + "/releases/download/" + $ref + "/" + $assembly + "-" + $version + ".zip"),
-                    checksum: ("sha256:" + $sha),
+                    checksum: $sha,
                     timestamp: $ts
                   }
                 ]
