@@ -4,10 +4,14 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_run:
+    workflows: ["Auto Tag"]
+    types: [completed]
   workflow_dispatch: {}
 
 jobs:
   build-release:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,8 +38,18 @@ jobs:
       - name: Compute Version
         id: ver
         run: |
-          # Derive version from tag name if available, otherwise from env
-          REF_NAME="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
+          # Derive version from tag name if available (push on tag). If triggered by workflow_run, use latest tag.
+          REF_NAME="${GITHUB_REF_NAME:-}"
+          if [ -z "$REF_NAME" ]; then
+            git fetch --tags --force
+            REF_NAME=$(git describe --tags --abbrev=0)
+          fi
+          if [ -z "$REF_NAME" ]; then
+            echo "No tag found to compute version" >&2
+            exit 1
+          fi
+          # Strip leading refs/ if present
+          REF_NAME="${REF_NAME##*/}"
           VERSION="${REF_NAME#v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
@@ -72,6 +86,7 @@ jobs:
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.ver.outputs.version }}
           files: dist/${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
