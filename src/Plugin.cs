@@ -4,6 +4,7 @@ using MediaBrowser.Common.Plugins;
 using MediaBrowser.Controller.Plugins;
 using System;
 using MediaBrowser.Model.Plugins;
+using MediaBrowser.Model.Serialization;
 
 namespace TechBrew.UserSwitcher;
 
@@ -12,7 +13,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public static Plugin? Instance { get; private set; }
     public override Guid Id => Guid.Parse("e0a4a1a2-5b6b-4e9d-88b1-1c71f0b9b0ab");
 
-    public Plugin(IApplicationPaths appPaths) : base(appPaths)
+    public Plugin(IApplicationPaths appPaths, IXmlSerializer xmlSerializer) : base(appPaths, xmlSerializer)
     {
         Instance = this;
     }
