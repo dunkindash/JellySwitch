@@ -100,6 +100,7 @@ jobs:
         run: |
           mkdir -p docs
           TAG="v$VERSION"
+          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           jq -n \
             --arg repo "$GITHUB_REPOSITORY" \
             --arg guid "${{ env.GUID }}" \
@@ -109,32 +110,26 @@ jobs:
             --arg abi "${{ env.TARGET_ABI }}" \
             --arg framework "${{ env.FRAMEWORK }}" \
             --arg sha "$SHA256" \
-            '{
-              name: "JellySwitch Plugin Repository",
-              description: "User Switcher & Quick Connect Helper for Jellyfin",
-              homepage: ("https://github.com/" + $repo),
-              plugins: [
-                {
-                  name: "User Switcher",
-                  guid: $guid,
-                  imageUrl: "",
-                  owner: "TechBrew",
-                  overview: "Admin-only user impersonation and Quick Connect authorization.",
-                  description: "Switch-as-user (ephemeral session) and Quick Connect code authorization from an admin UI.",
-                  category: "General",
-                  versions: [
-                    {
-                      version: $version,
-                      targetAbi: $abi,
-                      framework: $framework,
-                      changelog: ("Release " + $version),
-                      sourceUrl: ("https://github.com/" + $repo + "/releases/download/" + $ref + "/" + $assembly + "-" + $version + ".zip"),
-                      checksum: ("sha256:" + $sha)
-                    }
-                  ]
-                }
-              ]
-            }' > docs/manifest.json
+            '[
+              {
+                guid: $guid,
+                name: "User Switcher",
+                description: "Switch-as-user (ephemeral session) and Quick Connect code authorization from an admin UI.",
+                owner: "TechBrew",
+                category: "General",
+                imageUrl: "",
+                versions: [
+                  {
+                    version: $version,
+                    changelog: ("Release " + $version),
+                    targetAbi: $abi,
+                    sourceUrl: ("https://github.com/" + $repo + "/releases/download/" + $ref + "/" + $assembly + "-" + $version + ".zip"),
+                    checksum: ("sha256:" + $sha),
+                    timestamp: $TS
+                  }
+                ]
+              }
+            ]' > docs/manifest.json
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
