@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using Jellyfin.Plugin;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Controller.Plugins;
 using System;
+using MediaBrowser.Model.Plugins;
 
 namespace TechBrew.UserSwitcher;
 

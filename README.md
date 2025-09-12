@@ -1,204 +1,74 @@
-# Jellyfin Plugin: User Switcher & Quick Connect Helper (10.10.7)
+<div align="center">
 
-Admin-only plugin that lets you:
+# JellySwitch — User Switcher & Quick Connect Helper for Jellyfin
 
-- **Impersonate** any user in a **new tab** (no logout) using the official **Quick Connect** flow
-- **Authorize** a **Quick Connect** code for the user of your choice (paste a 6-char code from the user’s device)
+Admin-only tools to impersonate users and authorize Quick Connect codes.
 
-All actions are logged. Built for **Jellyfin 10.10.7**.
+Supports Jellyfin 10.10.x
+
+</div>
 
 ---
 
-## Install from Jellyfin Plugin Catalog
+## Features
 
-You can install via the built-in catalog by adding this repository:
+- Impersonate any user in a new tab (ephemeral session) via official Quick Connect
+- Authorize a 6-character Quick Connect code for any user
+- Admin-only access; all actions are logged
 
-1. In Jellyfin, go to: Dashboard → Plugins → Repositories
-2. Click Add and use:
-   - Name: JellySwitch
-   - URL: https://<your-username>.github.io/JellySwitch/manifest.json
-3. Open Plugins → Catalog, search for "User Switcher", then Install.
-4. Restart Jellyfin.
+## Install via Plugin Catalog
+
+Add this repository in Jellyfin:
+
+1. Dashboard → Plugins → Repositories → Add
+2. Name: JellySwitch
+3. URL: https://<your-username>.github.io/JellySwitch/manifest.json
+4. Plugins → Catalog → search "User Switcher" → Install
+5. Restart Jellyfin
 
 Notes:
-- The URL above is served from GitHub Pages. Make sure GitHub Pages is enabled for this repo (Settings → Pages → Build from main, folder: /docs).
-- Each release updates `docs/manifest.json` automatically via GitHub Actions.
+- Enable GitHub Pages (Settings → Pages → Build from main, folder: /docs)
+- Releases automatically update `docs/manifest.json`
 
-## Manual install (zip)
+## Manual Install
 
-- Download the latest `TechBrew.UserSwitcher-<version>.zip` from Releases
-- Extract into your Jellyfin plugins directory under `TechBrew.UserSwitcher/`
-- Restart Jellyfin
+1. Download `TechBrew.UserSwitcher-<version>.zip` from Releases
+2. Extract to your Jellyfin plugins directory as `TechBrew.UserSwitcher/`
+3. Restart Jellyfin
 
-Typical plugin paths:
+Common plugin paths:
 - Linux: /var/lib/jellyfin/plugins/
 - Windows (service): %ProgramData%/Jellyfin/Server/plugins/
 - Windows (user): %LocalAppData%/jellyfin/plugins/
 
+## Configuration & Usage
+
+- Dashboard → Plugins → User Switcher
+- Search for a user, click Impersonate to open a new tab as that user
+- Enter a device Quick Connect code + select a user → Authorize
+
 ## Development
 
-Requirements:
-- .NET SDK 8.0+
-- Jellyfin server 10.10.x
+Requirements: .NET 8 SDK, Jellyfin 10.10.x
 
 Build:
 ```bash
-# from repo root
  dotnet restore src/UserSwitcher.csproj
  dotnet publish src/UserSwitcher.csproj -c Release -o artifacts/publish
 ```
+Local test: copy `artifacts/publish/` to your Jellyfin plugins folder under `TechBrew.UserSwitcher/` and restart.
 
-Local test install:
-- Copy `artifacts/publish/` contents into your Jellyfin plugins directory under `TechBrew.UserSwitcher/`
-- Restart Jellyfin
+## Release Automation
 
-## Releasing
+- Merge PRs into `main` (protected branch). Label PR with `release:minor` or `release:major` to bump version; default is patch.
+- Auto Tag workflow creates `vX.Y.Z` tag on merge.
+- Release workflow builds the zip and publishes `docs/manifest.json` for the catalog.
 
-Create a tag and push (e.g., `v0.1.0`). The GitHub Actions workflow will:
-- Build and publish the plugin
-- Create a zip release asset: `TechBrew.UserSwitcher-<version>.zip`
-- Compute SHA256 and update `docs/manifest.json` with:
-  - `version`, `targetAbi`, `framework`
-  - `sourceUrl` and `checksum`
+## Security
 
-Ensure GitHub Pages is enabled; the repository manifest will be available at:
-`https://<your-username>.github.io/JellySwitch/manifest.json`
-
-## Security & Permissions
-
-- Endpoints are restricted to administrators; access is validated per request.
-- Actions are logged with user, target user, and timestamp.
-
-## Admin UI
-
-- Dashboard → Plugins → User Switcher
-- Features:
-  - User search and selection
-  - Impersonate: opens a new tab with a temporary session
-  - Quick Connect: authorize a 6-character code for a specific user
+- Endpoints require Admin and enforce per-request checks
+- Actions logged with admin, target user, timestamp
 
 ---
 
-## Original PRD
-
-Got it 🚀 — here’s a **Product Requirements Document (PRD)** tailored for the **Jellyfin User Switcher / Quick Connect Helper plugin**. You can paste this straight into your editor to use as a build guide and hand back to me when you’re ready for code.
-
----
-
-# PRD: Jellyfin User Switcher & Quick Connect Helper
-
-## Overview
-
-A Jellyfin plugin that allows administrators to:
-
-1. **Impersonate users**: Open a new browser tab already logged in as a selected user (ephemeral session).
-2. **Authorize Quick Connect codes**: Paste a QC code generated by a device and bind it to any user of choice.
-
-This plugin improves admin control, user onboarding, and troubleshooting by removing the need for manual password sharing or logouts.
-
----
-
-## Goals
-
-* Provide an **admin-only UI** within the Jellyfin dashboard.
-* Enable admins to:
-
-  * Search/select any Jellyfin user.
-  * Generate a temporary impersonation session for troubleshooting.
-  * Authorize an active Quick Connect code for a user of choice.
-* Ensure all actions are logged for auditing.
-* Compatible with **Jellyfin 10.10.7** and installable via the built-in **Plugin Catalog**.
-
----
-
-## Non-Goals
-
-* Persisting impersonation tokens (they must be short-lived).
-* Generating Quick Connect codes directly (only devices generate them).
-* Extending features to non-admin users.
-
----
-
-## Functional Requirements
-
-### 1. Admin Dashboard UI
-
-* A new entry under **Dashboard → Plugins → User Switcher**.
-* Components:
-
-  * **User Search**: Search bar + dropdown of matching users.
-  * **Impersonate Button**: Opens a new tab with the selected user’s session.
-  * **Quick Connect Authorization**:
-
-    * Input field for a **6-character QC code**.
-    * Dropdown to select target user.
-    * Button: **Authorize Code**.
-
-### 2. Server API Endpoints
-
-Expose plugin-specific endpoints under `/Plugin/UserSwitcher`:
-
-* `GET /Plugin/UserSwitcher/Users?search=<query>`
-  Returns list of users (Id, Name, Policy).
-
-* `POST /Plugin/UserSwitcher/Impersonate`
-  Body: `{ userId: "<guid>" }`
-  Flow: Initiate QC → Authorize → Authenticate → return impersonation URL.
-  Response: `{ impersonationUrl: "<url>" }`
-
-* `POST /Plugin/UserSwitcher/AuthorizeCode`
-  Body: `{ code: "<6-char>", userId: "<guid>" }`
-  Flow: Forward to `/QuickConnect/Authorize`.
-  Response: `{ ok: true }`
-
-### 3. Logging & Security
-
-* Only available to **Admin accounts**.
-* Every impersonation or QC authorization action must be logged with:
-
-  * Admin username
-  * Target user
-  * Timestamp
-  * Action type (`Impersonation` or `AuthorizeCode`)
-* Use Jellyfin’s built-in `ILogger`.
-
----
-
-## Technical Notes
-
-* **Language/Framework**: C# (.NET, Jellyfin plugin SDK).
-* **Target ABI**: `10.10.7` (stable).
-* **Quick Connect APIs used**:
-
-  * `POST /QuickConnect/Initiate`
-  * `POST /QuickConnect/Authorize`
-  * `POST /Users/AuthenticateWithQuickConnect`
-* **Session handling**:
-
-  * Impersonation session tokens expire per Jellyfin policy (no extension).
-  * Optional: mark impersonation sessions with a banner (`?imp=1` in URL).
-
----
-
-## Deliverables
-
-1. **Plugin manifest.json** for catalog installation.
-2. **Plugin.cs** implementing `IHasWebPages` for admin UI.
-3. **Controller (UserSwitcherController.cs)** with required endpoints.
-4. **Web UI** (`config.html` + `config.js`) with:
-
-   * User search
-   * Impersonate button
-   * QC code input + authorize button
-5. **README** with install/build instructions.
-
----
-
-## Acceptance Criteria
-
-* ✅ Plugin installs from catalog and appears under **Dashboard → Plugins**.
-* ✅ Admin can search for users.
-* ✅ Clicking **Impersonate** opens Jellyfin in a new tab as that user.
-* ✅ Entering a valid QC code + user → device logs in as that user.
-* ✅ All actions are logged.
-* ✅ No non-admins can access the page or endpoints.
+For the detailed product requirements, see `docs/PRD.md`.
