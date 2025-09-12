@@ -1,0 +1,1 @@
+console.log('UserSwitcher admin UI loaded');
