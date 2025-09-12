@@ -38,19 +38,21 @@ jobs:
       - name: Compute Version
         id: ver
         run: |
-          # Derive version from tag name if available (push on tag). If triggered by workflow_run, use latest tag.
+          # Determine version from tag. If current ref isn't a tag, fall back to latest tag.
           REF_NAME="${GITHUB_REF_NAME:-}"
-          if [ -z "$REF_NAME" ]; then
-            git fetch --tags --force
-            REF_NAME=$(git describe --tags --abbrev=0)
-          fi
-          if [ -z "$REF_NAME" ]; then
-            echo "No tag found to compute version" >&2
-            exit 1
-          fi
-          # Strip leading refs/ if present
+          # Normalize
           REF_NAME="${REF_NAME##*/}"
-          VERSION="${REF_NAME#v}"
+          if echo "$REF_NAME" | grep -Eq '^v[0-9]+(\.[0-9]+)*$'; then
+            VERSION="${REF_NAME#v}"
+          else
+            git fetch --tags --force
+            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+            if [ -z "$LAST_TAG" ]; then
+              echo "No tag found to compute version" >&2
+              exit 1
+            fi
+            VERSION="${LAST_TAG#v}"
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Restore
@@ -97,11 +99,12 @@ jobs:
           SHA256: ${{ steps.sum.outputs.sha256 }}
         run: |
           mkdir -p docs
+          TAG="v$VERSION"
           jq -n \
             --arg repo "$GITHUB_REPOSITORY" \
             --arg guid "${{ env.GUID }}" \
             --arg assembly "${{ env.ASSEMBLY_NAME }}" \
-            --arg ref "$GITHUB_REF_NAME" \
+            --arg ref "$TAG" \
             --arg version "$VERSION" \
             --arg abi "${{ env.TARGET_ABI }}" \
             --arg framework "${{ env.FRAMEWORK }}" \
@@ -124,7 +127,7 @@ jobs:
                       version: $version,
                       targetAbi: $abi,
                       framework: $framework,
-                      changelog: ("Release " + $ref),
+                      changelog: ("Release " + $version),
                       sourceUrl: ("https://github.com/" + $repo + "/releases/download/" + $ref + "/" + $assembly + "-" + $version + ".zip"),
                       checksum: ("sha256:" + $sha)
                     }
