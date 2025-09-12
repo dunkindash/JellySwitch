@@ -21,7 +21,7 @@ jobs:
       PROJECT: src/UserSwitcher.csproj
       ASSEMBLY_NAME: TechBrew.UserSwitcher
       GUID: e0a4a1a2-5b6b-4e9d-88b1-1c71f0b9b0ab
-      TARGET_ABI: 10.10.0.0
+      TARGET_ABI: 10.10.7.0
       FRAMEWORK: net8.0
     steps:
       - name: Checkout
