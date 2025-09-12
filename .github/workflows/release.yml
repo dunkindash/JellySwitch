@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
+      id-token: write
     env:
       PROJECT: src/UserSwitcher.csproj
       ASSEMBLY_NAME: TechBrew.UserSwitcher
@@ -74,7 +76,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update docs/manifest.json (plugin repository)
+      - name: Generate docs/manifest.json (plugin repository)
         env:
           VERSION: ${{ steps.ver.outputs.version }}
           SHA256: ${{ steps.sum.outputs.sha256 }}
@@ -115,9 +117,13 @@ jobs:
                 }
               ]
             }' > docs/manifest.json
-          git config user.email "github-actions@github.com"
-          git config user.name "github-actions"
-          git add docs/manifest.json
-          git commit -m "docs: update plugin repository manifest for $VERSION" || echo "No changes to commit"
-          git push
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
 
