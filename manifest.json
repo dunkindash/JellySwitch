@@ -9,7 +9,7 @@
   "description": "Switch-as-user (ephemeral session) and Quick Connect code authorization from an admin UI. All actions audited.",
   "category": "General",
   "imageUrl": "",
-  "sourceUrl": "https://github.com/yourorg/jellyfin-plugin-user-switcher",
+  "sourceUrl": "",
   "changelog": "Initial preview.",
   "hasTranslations": false
 }

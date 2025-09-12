@@ -1,0 +1,123 @@
+name: Build and Release Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: {}
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      PROJECT: src/UserSwitcher.csproj
+      ASSEMBLY_NAME: TechBrew.UserSwitcher
+      GUID: e0a4a1a2-5b6b-4e9d-88b1-1c71f0b9b0ab
+      TARGET_ABI: 10.10.0.0
+      FRAMEWORK: net8.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Compute Version
+        id: ver
+        run: |
+          # Derive version from tag name if available, otherwise from env
+          REF_NAME="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
+          VERSION="${REF_NAME#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Restore
+        run: dotnet restore "$PROJECT"
+
+      - name: Publish
+        run: dotnet publish "$PROJECT" -c Release -o artifacts/publish
+
+      - name: Prepare plugin contents
+        run: |
+          mkdir -p dist/${{ env.ASSEMBLY_NAME }}
+          SOURCE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip"
+          jq \
+            --arg v "${{ steps.ver.outputs.version }}" \
+            --arg src "$SOURCE_URL" \
+            --arg abi "${{ env.TARGET_ABI }}" \
+            '.version=$v | .sourceUrl=$src | .targetAbi=$abi' manifest.json > artifacts/publish/manifest.json
+          # Copy published files into a folder named after the assembly (common layout for Jellyfin plugins)
+          cp -r artifacts/publish/* dist/${{ env.ASSEMBLY_NAME }}/
+
+      - name: Create zip
+        run: |
+          mkdir -p dist
+          (cd dist && zip -r "${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip" "${{ env.ASSEMBLY_NAME }}")
+
+      - name: Compute checksum
+        id: sum
+        run: |
+          cd dist
+          SHA=$(shasum -a 256 "${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip" | cut -d ' ' -f1)
+          echo "sha256=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update docs/manifest.json (plugin repository)
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          SHA256: ${{ steps.sum.outputs.sha256 }}
+        run: |
+          mkdir -p docs
+          jq -n \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg guid "${{ env.GUID }}" \
+            --arg assembly "${{ env.ASSEMBLY_NAME }}" \
+            --arg ref "$GITHUB_REF_NAME" \
+            --arg version "$VERSION" \
+            --arg abi "${{ env.TARGET_ABI }}" \
+            --arg framework "${{ env.FRAMEWORK }}" \
+            --arg sha "$SHA256" \
+            '{
+              name: "JellySwitch Plugin Repository",
+              description: "User Switcher & Quick Connect Helper for Jellyfin",
+              homepage: ("https://github.com/" + $repo),
+              plugins: [
+                {
+                  name: "User Switcher",
+                  guid: $guid,
+                  imageUrl: "",
+                  owner: "TechBrew",
+                  overview: "Admin-only user impersonation and Quick Connect authorization.",
+                  description: "Switch-as-user (ephemeral session) and Quick Connect code authorization from an admin UI.",
+                  category: "General",
+                  versions: [
+                    {
+                      version: $version,
+                      targetAbi: $abi,
+                      framework: $framework,
+                      changelog: ("Release " + $ref),
+                      sourceUrl: ("https://github.com/" + $repo + "/releases/download/" + $ref + "/" + $assembly + "-" + $version + ".zip"),
+                      checksum: ("sha256:" + $sha)
+                    }
+                  ]
+                }
+              ]
+            }' > docs/manifest.json
+          git config user.email "github-actions@github.com"
+          git config user.name "github-actions"
+          git add docs/manifest.json
+          git commit -m "docs: update plugin repository manifest for $VERSION" || echo "No changes to commit"
+          git push
+
