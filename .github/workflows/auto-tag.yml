@@ -1,11 +1,9 @@
 name: Auto Tag
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches: [ main ]
-    paths-ignore:
-      - 'docs/**'
-      - '.github/**'
   workflow_dispatch:
     inputs:
       version:
@@ -14,12 +12,29 @@ on:
 
 jobs:
   tag:
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine bump
+        id: bump
+        run: |
+          # Default bump is patch
+          BUMP=patch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Collect labels
+            LABELS=$(jq -r '.pull_request.labels[].name' <(echo '${{ toJson(github.event) }}') || true)
+            echo "Labels: $LABELS"
+            if echo "$LABELS" | grep -qi '^release:major$'; then BUMP=major; fi
+            if echo "$LABELS" | grep -qi '^release:minor$'; then BUMP=minor; fi
+          fi
+          echo "bump=$BUMP" >> $GITHUB_OUTPUT
 
       - name: Determine version
         id: ver
@@ -28,15 +43,24 @@ jobs:
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
             exit 0
           fi
-          # Auto-bump: If last tag is vX.Y.Z, create vX.Y.(Z+1)
           LAST=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           NUM=${LAST#v}
           IFS='.' read -r MA MI PA <<< "$NUM"
-          PA=$((PA+1))
+          case "${{ steps.bump.outputs.bump }}" in
+            major)
+              MA=$((MA+1)); MI=0; PA=0;
+              ;;
+            minor)
+              MI=$((MI+1)); PA=0;
+              ;;
+            *)
+              PA=$((PA+1));
+              ;;
+          esac
           NEXT="${MA}.${MI}.${PA}"
           echo "version=$NEXT" >> $GITHUB_OUTPUT
 
-      - name: Create tag
+      - name: Create and push tag
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
           git tag -a "v$VERSION" -m "Release v$VERSION"
