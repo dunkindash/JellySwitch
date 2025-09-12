@@ -60,6 +60,11 @@ jobs:
           NEXT="${MA}.${MI}.${PA}"
           echo "version=$NEXT" >> $GITHUB_OUTPUT
 
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Create and push tag
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
