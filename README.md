@@ -22,7 +22,7 @@ Add this repository in Jellyfin:
 
 1. Dashboard → Plugins → Repositories → Add
 2. Name: JellySwitch
-3. URL: https://<your-username>.github.io/JellySwitch/manifest.json
+3. URL: https://dunkindash.github.io/JellySwitch/manifest.json
 4. Plugins → Catalog → search "User Switcher" → Install
 5. Restart Jellyfin
 
@@ -30,16 +30,7 @@ Notes:
 - Enable GitHub Pages (Settings → Pages → Build from main, folder: /docs)
 - Releases automatically update `docs/manifest.json`
 
-## Manual Install
-
-1. Download `TechBrew.UserSwitcher-<version>.zip` from Releases
-2. Extract to your Jellyfin plugins directory as `TechBrew.UserSwitcher/`
-3. Restart Jellyfin
-
-Common plugin paths:
-- Linux: /var/lib/jellyfin/plugins/
-- Windows (service): %ProgramData%/Jellyfin/Server/plugins/
-- Windows (user): %LocalAppData%/jellyfin/plugins/
+<!-- Manual install no longer recommended; install via catalog URL above. -->
 
 ## Configuration & Usage
 
