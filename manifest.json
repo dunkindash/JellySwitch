@@ -2,7 +2,7 @@
   "name": "User Switcher",
   "guid": "e0a4a1a2-5b6b-4e9d-88b1-1c71f0b9b0ab",
   "version": "0.1.0",
-  "targetAbi": "10.10.0.0",
+  "targetAbi": "10.10.7.0",
   "framework": "net8.0",
   "owner": "TechBrew",
   "overview": "Admin-only tools to impersonate users and authorize Quick Connect codes.",
