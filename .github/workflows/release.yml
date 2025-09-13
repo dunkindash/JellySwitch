@@ -64,7 +64,8 @@ jobs:
       - name: Prepare plugin contents
         run: |
           mkdir -p dist/${{ env.ASSEMBLY_NAME }}
-          SOURCE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip"
+          TAG="v${{ steps.ver.outputs.version }}"
+          SOURCE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip"
           jq \
             --arg v "${{ steps.ver.outputs.version }}" \
             --arg src "$SOURCE_URL" \
