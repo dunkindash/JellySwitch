@@ -30,8 +30,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             EmbeddedResourcePath = GetType().Namespace + ".web.config.html",
             EnableInMainMenu = false,
             MenuSection = "admin",
-            DisplayName = "User Switcher",
-            PluginId = Id
+            DisplayName = "User Switcher"
         };
         
         // Functional tools page (user switching interface)
