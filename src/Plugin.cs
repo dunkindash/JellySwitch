@@ -28,8 +28,11 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         // Configuration page (settings only)
         yield return new PluginPageInfo
         {
-            Name = "userswitcher",
-            EmbeddedResourcePath = $"{asm}.web.config.html"
+            Name = "UserSwitcherConfiguration",
+            EmbeddedResourcePath = $"{asm}.web.config.html",
+            EnableInMainMenu = false,
+            MenuSection = "admin",
+            DisplayName = "User Switcher"
         };
         
         // Functional tools page (user switching interface)
