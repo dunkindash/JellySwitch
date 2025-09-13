@@ -1,23 +1,38 @@
 <div id="userswitcherConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage userswitcherConfigurationPage" data-plugin-id="e0a4a1a2-5b6b-4e9d-88b1-1c71f0b9b0ab">
   <div class="content-primary" style="padding:16px;">
     <div class="verticalSection">
-      <h2 class="sectionTitle">User Switcher</h2>
-
-      <div class="row" style="margin-bottom:12px;">
-        <label for="userSearch" style="display:block;margin-bottom:6px;font-weight:600;">Search users</label>
-        <input id="userSearch" type="text" placeholder="Type to search..." />
-        <select id="userSelect" style="min-width:260px;display:block;margin-top:8px;"></select>
-      </div>
-
-      <div class="row" style="margin-bottom:12px;">
-        <button id="btnImpersonate" type="button">Impersonate (opens new tab)</button>
-        <span class="fieldDescription" style="margin-left:8px;color:#666;">Temporary session; expires per server policy</span>
-        <div class="row" style="margin-top:10px;">
-          <label for="qcCode" style="display:block;margin-bottom:6px;font-weight:600;">Quick Connect code</label>
-          <input id="qcCode" type="text" maxlength="6" placeholder="ABC123" />
-          <button id="btnAuthorize" type="button">Authorize code for selected user</button>
+      <h2 class="sectionTitle">User Switcher Configuration</h2>
+      
+      <!-- Configuration Settings -->
+      <div class="configSection" style="margin-bottom: 24px; padding: 16px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9;">
+        <h3 style="margin-top: 0;">Plugin Settings</h3>
+        
+        <div class="row" style="margin-bottom: 16px;">
+          <label for="impersonationMinutes" style="display: block; margin-bottom: 6px; font-weight: 600;">Impersonation Session Duration (minutes)</label>
+          <input id="impersonationMinutes" type="number" min="1" max="1440" style="width: 100px;" />
+          <span class="fieldDescription" style="margin-left: 8px; color: #666;">How long impersonation sessions last before expiring (1-1440 minutes)</span>
         </div>
-        <pre id="log" style="margin-top:16px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;"></pre>
+        
+        <div class="row" style="margin-bottom: 16px;">
+          <label style="display: flex; align-items: center; font-weight: 600;">
+            <input id="watermarkImpersonation" type="checkbox" style="margin-right: 8px;" />
+            Show watermark during impersonation
+          </label>
+          <span class="fieldDescription" style="margin-left: 24px; color: #666;">Display a visual indicator when an admin is impersonating a user</span>
+        </div>
+        
+        <div class="row">
+          <button id="btnSaveConfig" type="button" class="button-primary">Save Configuration</button>
+          <span id="configStatus" style="margin-left: 12px; color: #666;"></span>
+        </div>
+      </div>
+      
+      <!-- Link to Functional Tools -->
+      <div class="row" style="margin-top: 24px; padding: 16px; border: 1px solid #007acc; border-radius: 4px; background-color: #f0f8ff;">
+        <h3 style="margin-top: 0; color: #007acc;">🔗 User Switcher Tools</h3>
+        <p style="margin-bottom: 12px;">To use the user switching and Quick Connect features, go to:</p>
+        <a href="/web/configurationpage?name=userswitchertools" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #007acc; color: white; text-decoration: none; border-radius: 4px; font-weight: 600;">Open User Switcher Tools</a>
+        <p style="margin-top: 8px; font-size: 12px; color: #666;">This link opens the functional interface where you can impersonate users and authorize Quick Connect codes.</p>
       </div>
     </div>
   </div>
