@@ -4,14 +4,14 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_run:
-    workflows: ["Auto Tag"]
-    types: [completed]
   workflow_dispatch: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-release:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -79,13 +79,6 @@ jobs:
           mkdir -p dist
           (cd dist && zip -r "${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip" "${{ env.ASSEMBLY_NAME }}")
 
-      - name: Compute checksum
-        id: sum
-        run: |
-          cd dist
-          SHA=$(shasum -a 256 "${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip" | cut -d ' ' -f1)
-          echo "sha256=$SHA" >> $GITHUB_OUTPUT
-
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
@@ -94,10 +87,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compute checksum (downloaded asset)
+        id: sum_remote
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          TAG="v$VERSION"
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${{ env.ASSEMBLY_NAME }}-$VERSION.zip"
+          echo "Downloading $URL"
+          curl -L --fail --retry 6 --retry-delay 5 -o asset.zip "$URL"
+          SHA=$(shasum -a 256 asset.zip | cut -d ' ' -f1)
+          echo "sha256=$SHA" >> $GITHUB_OUTPUT
+
       - name: Generate docs/manifest.json (plugin repository)
         env:
           VERSION: ${{ steps.ver.outputs.version }}
-          SHA256: ${{ steps.sum.outputs.sha256 }}
+          SHA256: ${{ steps.sum_remote.outputs.sha256 }}
         run: |
           mkdir -p docs
           TAG="v$VERSION"
