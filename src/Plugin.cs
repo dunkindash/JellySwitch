@@ -23,30 +23,29 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public IEnumerable<PluginPageInfo> GetPages()
     {
-        var asm = GetType().Assembly.GetName().Name;
-
         // Configuration page (settings only)
         yield return new PluginPageInfo
         {
             Name = "UserSwitcherConfiguration",
-            EmbeddedResourcePath = $"{asm}.web.config.html",
+            EmbeddedResourcePath = GetType().Namespace + ".web.config.html",
             EnableInMainMenu = false,
             MenuSection = "admin",
-            DisplayName = "User Switcher"
+            DisplayName = "User Switcher",
+            PluginId = Id
         };
         
         // Functional tools page (user switching interface)
         yield return new PluginPageInfo
         {
             Name = "userswitchertools",
-            EmbeddedResourcePath = $"{asm}.web.userswitcher-tools.html"
+            EmbeddedResourcePath = GetType().Namespace + ".web.userswitcher-tools.html"
         };
         
         // JavaScript for both pages
         yield return new PluginPageInfo
         {
             Name = "userswitcher.js",
-            EmbeddedResourcePath = $"{asm}.web.userswitcher.js"
+            EmbeddedResourcePath = GetType().Namespace + ".web.userswitcher.js"
         };
     }
 }
