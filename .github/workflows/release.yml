@@ -79,7 +79,12 @@ jobs:
           mkdir -p dist
           (cd dist && zip -r "${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip" "${{ env.ASSEMBLY_NAME }}")
 
-      - name: Upload Release Asset
+      - name: Copy zip to docs (for Pages hosting)
+        run: |
+          mkdir -p docs
+          cp "dist/${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip" docs/
+
+      - name: Upload Release Asset (optional)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.version }}
@@ -87,26 +92,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compute checksum (downloaded asset)
-        id: sum_remote
-        env:
-          VERSION: ${{ steps.ver.outputs.version }}
+      - name: Compute checksum (local Pages asset)
+        id: sum_local
         run: |
-          TAG="v$VERSION"
-          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${{ env.ASSEMBLY_NAME }}-$VERSION.zip"
-          echo "Downloading $URL"
-          curl -L --fail --retry 6 --retry-delay 5 -o asset.zip "$URL"
-          SHA=$(shasum -a 256 asset.zip | cut -d ' ' -f1)
+          SHA=$(shasum -a 256 "dist/${{ env.ASSEMBLY_NAME }}-${{ steps.ver.outputs.version }}.zip" | cut -d ' ' -f1)
           echo "sha256=$SHA" >> $GITHUB_OUTPUT
 
       - name: Generate docs/manifest.json (plugin repository)
         env:
           VERSION: ${{ steps.ver.outputs.version }}
-          SHA256: ${{ steps.sum_remote.outputs.sha256 }}
+          SHA256: ${{ steps.sum_local.outputs.sha256 }}
         run: |
           mkdir -p docs
           TAG="v$VERSION"
           TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          REPO="${GITHUB_REPOSITORY#*/}"
+          PAGES_BASE="https://$OWNER.github.io/$REPO"
           jq -n \
             --arg repo "$GITHUB_REPOSITORY" \
             --arg guid "${{ env.GUID }}" \
@@ -117,6 +119,7 @@ jobs:
             --arg framework "${{ env.FRAMEWORK }}" \
             --arg sha "$SHA256" \
             --arg ts "$TS" \
+            --arg base "$PAGES_BASE" \
             '[
               {
                 guid: $guid,
@@ -130,7 +133,7 @@ jobs:
                     version: $version,
                     changelog: ("Release " + $version),
                     targetAbi: $abi,
-                    sourceUrl: ("https://github.com/" + $repo + "/releases/download/" + $ref + "/" + $assembly + "-" + $version + ".zip"),
+                    sourceUrl: ($base + "/" + $assembly + "-" + $version + ".zip"),
                     checksum: ("sha256:" + $sha),
                     timestamp: $ts
                   }
