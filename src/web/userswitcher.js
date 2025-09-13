@@ -1,12 +1,19 @@
 /* userswitcher.js */
 (function(){
   function setup(page){
+    // Functional elements only
     const userSearch = page.querySelector('#userSearch');
     const userSelect = page.querySelector('#userSelect');
     const btnImpersonate = page.querySelector('#btnImpersonate');
     const btnAuthorize = page.querySelector('#btnAuthorize');
     const qcCode = page.querySelector('#qcCode');
     const logEl = page.querySelector('#log');
+    
+    // Ensure required elements exist
+    if (!userSearch || !userSelect || !btnImpersonate || !btnAuthorize || !qcCode || !logEl) {
+      console.log('User Switcher: Required elements not found, skipping setup');
+      return;
+    }
 
     function log(msg){
       const ts = new Date().toISOString();
@@ -18,6 +25,7 @@
       const base = `${window.location.origin}${(window.AppInfo && AppInfo.baseUrl) || ''}`;
       return `${base}/Plugin/UserSwitcher/${path}`;
     }
+
 
     async function fetchUsers(query){
       const url = api(`Users?search=${encodeURIComponent(query||'')}`);
@@ -92,6 +100,7 @@
       }
     }
 
+    // Event listeners for functional tools
     userSearch.addEventListener('input', () => {
       clearTimeout(userSearch._t);
       userSearch._t = setTimeout(refreshUsers, 250);
@@ -99,13 +108,118 @@
     btnAuthorize.addEventListener('click', authorizeCode);
     btnImpersonate.addEventListener('click', impersonate);
 
+    // Initialize functional tools
     refreshUsers();
   }
 
   document.addEventListener('viewshow', function(e){
     const page = e.target;
+    
+    // Handle configuration page (settings only)
     if(page && page.classList && page.classList.contains('userswitcherConfigurationPage')){
-      setup(page);
+      setupConfigurationPage(page);
+    }
+    
+    // Handle tools page (functional interface)
+    if(page && page.classList && page.classList.contains('userswitcherToolsPage')){
+      setupToolsPage(page);
     }
   });
+
+  // Configuration page setup (settings only)
+  function setupConfigurationPage(page) {
+    const impersonationMinutes = page.querySelector('#impersonationMinutes');
+    const watermarkImpersonation = page.querySelector('#watermarkImpersonation');
+    const btnSaveConfig = page.querySelector('#btnSaveConfig');
+    const configStatus = page.querySelector('#configStatus');
+    
+    if (!impersonationMinutes || !btnSaveConfig) {
+      // Elements not found, probably wrong page
+      return;
+    }
+
+    function showConfigStatus(msg, isError = false) {
+      if (configStatus) {
+        configStatus.textContent = msg;
+        configStatus.style.color = isError ? '#d32f2f' : '#2e7d32';
+        setTimeout(() => {
+          configStatus.textContent = '';
+        }, 3000);
+      }
+    }
+
+    async function loadConfiguration() {
+      try {
+        const resp = await fetch(`${window.location.origin}/System/Configuration/UserSwitcher`, {
+          credentials: 'same-origin'
+        });
+        
+        if (!resp.ok) {
+          throw new Error(`Failed to load configuration (${resp.status})`);
+        }
+        
+        const config = await resp.json();
+        
+        // Set form values
+        impersonationMinutes.value = config.ImpersonationMinutes || 15;
+        if (watermarkImpersonation) {
+          watermarkImpersonation.checked = config.WatermarkImpersonation !== false;
+        }
+        
+        showConfigStatus('Configuration loaded successfully');
+      } catch (e) {
+        console.error('Error loading configuration:', e);
+        // Set default values if loading fails
+        impersonationMinutes.value = 15;
+        if (watermarkImpersonation) {
+          watermarkImpersonation.checked = true;
+        }
+        showConfigStatus('Loaded default configuration', true);
+      }
+    }
+
+    async function saveConfiguration() {
+      try {
+        const config = {
+          ImpersonationMinutes: parseInt(impersonationMinutes.value) || 15,
+          WatermarkImpersonation: watermarkImpersonation ? watermarkImpersonation.checked : true
+        };
+        
+        // Validate input
+        if (config.ImpersonationMinutes < 1 || config.ImpersonationMinutes > 1440) {
+          throw new Error('Impersonation minutes must be between 1 and 1440');
+        }
+        
+        const resp = await fetch(`${window.location.origin}/System/Configuration/UserSwitcher`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify(config)
+        });
+        
+        if (!resp.ok) {
+          const errorText = await resp.text();
+          throw new Error(`Failed to save configuration (${resp.status}): ${errorText}`);
+        }
+        
+        showConfigStatus('Configuration saved successfully');
+      } catch (e) {
+        console.error('Error saving configuration:', e);
+        showConfigStatus(`Error: ${e.message}`, true);
+      }
+    }
+
+    // Configuration event listeners
+    btnSaveConfig.addEventListener('click', saveConfiguration);
+    
+    // Initialize
+    loadConfiguration();
+  }
+
+  // Tools page setup (functional interface)
+  function setupToolsPage(page) {
+    setup(page);
+  }
 })();

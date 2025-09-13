@@ -1,0 +1,49 @@
+<div id="userswitcherToolsPage" data-role="page" class="page type-interior pluginConfigurationPage userswitcherToolsPage" data-plugin-id="e0a4a1a2-5b6b-4e9d-88b1-1c71f0b9b0ab">
+  <div class="content-primary" style="padding:16px;">
+    <div class="verticalSection">
+      <h2 class="sectionTitle">User Switcher Tools</h2>
+      <p style="margin-bottom: 24px; color: #666;">Admin tools for user impersonation and Quick Connect authorization. All actions are logged.</p>
+      
+      <!-- User Selection -->
+      <div class="row" style="margin-bottom:24px;">
+        <h3 style="margin-bottom: 12px;">Select User</h3>
+        <label for="userSearch" style="display:block;margin-bottom:6px;font-weight:600;">Search users</label>
+        <input id="userSearch" type="text" placeholder="Type to search users..." style="margin-bottom: 8px;" />
+        <select id="userSelect" style="min-width:300px;display:block;margin-bottom:8px;"></select>
+        <span class="fieldDescription" style="color:#666;">Search and select a user to impersonate or authorize Quick Connect codes for.</span>
+      </div>
+
+      <!-- Impersonation Section -->
+      <div class="row" style="margin-bottom:24px; padding: 16px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9;">
+        <h3 style="margin-top: 0;">User Impersonation</h3>
+        <button id="btnImpersonate" type="button" class="button-primary">Impersonate Selected User</button>
+        <span class="fieldDescription" style="margin-left:12px;color:#666;">Opens a new tab with temporary session as the selected user</span>
+      </div>
+
+      <!-- Quick Connect Section -->
+      <div class="row" style="margin-bottom:24px; padding: 16px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9;">
+        <h3 style="margin-top: 0;">Quick Connect Authorization</h3>
+        <div class="row" style="margin-bottom: 12px;">
+          <label for="qcCode" style="display:block;margin-bottom:6px;font-weight:600;">Quick Connect code</label>
+          <input id="qcCode" type="text" maxlength="6" placeholder="ABC123" style="width: 120px; text-transform: uppercase; margin-right: 12px;" />
+          <button id="btnAuthorize" type="button" class="button-primary">Authorize Code</button>
+        </div>
+        <span class="fieldDescription" style="color:#666;">Enter a 6-character Quick Connect code from a device to authorize it for the selected user.</span>
+      </div>
+
+      <!-- Activity Log -->
+      <div class="row">
+        <h3>Activity Log</h3>
+        <pre id="log" style="margin-top:8px;padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;background-color:#f5f5f5;border:1px solid #ddd;border-radius:4px;max-height:300px;overflow-y:auto;"></pre>
+      </div>
+
+      <!-- Configuration Link -->
+      <div style="margin-top: 24px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9;">
+        <strong>Plugin Settings:</strong> 
+        <a href="/web/configurationpage?name=userswitcher" target="_blank">Configure plugin settings</a>
+        <span style="margin-left: 8px; color: #666;">(session duration, watermark options)</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="userswitcher.js"></script>

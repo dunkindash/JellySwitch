@@ -25,11 +25,21 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         var asm = GetType().Assembly.GetName().Name;
 
+        // Configuration page (settings only)
         yield return new PluginPageInfo
         {
             Name = "userswitcher",
             EmbeddedResourcePath = $"{asm}.web.config.html"
         };
+        
+        // Functional tools page (user switching interface)
+        yield return new PluginPageInfo
+        {
+            Name = "userswitchertools",
+            EmbeddedResourcePath = $"{asm}.web.userswitcher-tools.html"
+        };
+        
+        // JavaScript for both pages
         yield return new PluginPageInfo
         {
             Name = "userswitcher.js",
